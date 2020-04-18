@@ -1,6 +1,6 @@
 # 加拿大银行抵押品报告
 
-![SQL](SQL Logo.png)  [English version](README_EN.md)
+<img width="90" height="30" src="SQL-Logo.png"/>   [English version](README_EN.md)
 
 本报告的目的是向加拿大银行提供相关抵押品的数据。
 
