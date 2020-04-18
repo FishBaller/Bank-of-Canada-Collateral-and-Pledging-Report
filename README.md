@@ -1,6 +1,6 @@
 # 加拿大银行抵押品报告
 
-<img width="90" height="30" src="SQL-Logo.png"/>   [English version](README_EN.md)
+<img width="100" height="30" src="SQL-Logo.png"/>   [English version](README_EN.md)
 
 本报告的目的是向加拿大银行提供相关抵押品的数据。
 
@@ -128,6 +128,43 @@ from sec
 
 按照要求，此步骤是在创建原始表之后整理和分类所有提供的原始数据。
 
-创建新表格' cust2 '，从原' Customer '表中选择所有列，并使用' Case When '语句将所有客户筛选并分类为与模板对称的三种对手类型。
+创建新表格‘cust2’，从原‘Customer’表中选择所有列，并使用‘Case When’语句将所有客户筛选并分类为与模板对称的三种对手类型。
 
 创建‘sec2’表格方法相同，将资产按照要求分为三种不同等级。
+
+### 连接表格
+
+通过数据库里的主键，原交易记录表连接‘cust2’和‘sec2’。
+
+并创建新表' cust_join '和' sec_join '。
+
+``` SQL
+  
+create table cust_join as
+select
+      a.*,
+      b.cpty_type
+from col_trans a
+left join cust2 b
+on a.customer_id = b.customer_id
+where a.product_type = 'Security'
+;
+
+
+create table sec_join as
+select
+      a.*,
+      coalesce(b.asset_class, c.asset_class) asset_class     
+from cust_join a
+left join sec2 b
+on a.security_id = b.security_id                             
+left join sec2 c
+on a.security_id = c.security_id_2
+;
+```
+
+交易记录表和‘cust2‘之间的主键是‘customer_id’
+
+交易记录表和‘sec2‘之间的主键是‘security_id’
+
+因此，目前“Col_Trans”中的所有交易都可以按照交易对手类型和资产级别两种类别进行归类。
