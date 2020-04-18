@@ -1,6 +1,6 @@
 # 加拿大银行抵押品报告
 
-![py27][py27] [English version](README_EN.md)
+![](SQL Logo.png)  [English version](README_EN.md)
 
 本报告的目的是向加拿大银行提供相关抵押品的数据。
 
