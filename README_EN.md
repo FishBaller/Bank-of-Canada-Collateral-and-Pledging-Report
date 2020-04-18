@@ -1,6 +1,6 @@
 # Bank of Canada Collateral and Pledging Report
 
-[Chinese Version](README.md)
+<img width="100" height="30" src="SQL-Logo.png"/>   [Chinese Version](README.md)
 
 The purpose of this report is to provide the Bank of Canada with data on collateral pledging
 
