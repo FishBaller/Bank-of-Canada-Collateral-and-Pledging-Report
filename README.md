@@ -168,3 +168,88 @@ on a.security_id = c.security_id_2
 交易记录表和‘sec2‘之间的主键是‘security_id’
 
 因此，目前“Col_Trans”中的所有交易都可以按照交易对手类型和资产级别两种类别进行归类。
+
+### 根据要求转换数据
+
+```SQL
+create table output as
+select
+      cpty_type,
+      case
+          when post_direction = 'Deliv to Bank' then 'Collateral Received'
+          else 'Collateral Pledged'
+      end as direction,
+      margin_type,
+      sum(case when asset_class = 'Level_1_Asset' then pv_cde else 0 end) level_1_asset,                         
+      sum(case when asset_class = 'Level_2_Asset' then pv_cde else 0 end) level_2_asset,                         
+      sum(case when asset_class = 'Level_3_Asset' then pv_cde else 0 end) level_3_asset
+from sec_join
+group by cpty_type, direction, margin_type
+order by cpty_type, direction, margin_type
+;
+```
+
+从‘sec_join’中选择与模板相对应的六列数据。
+
+按照模板将‘Deliv to Bank’和‘Deliv to Ctpy’翻译为‘Collateral Received’和‘Collateral Pledged’。
+
+根据资产类型定义，计算每个资产类型的价值总和。
+
+![](translate.png)
+
+### 调整最终格式
+
+``` SQL
+create table rep_strusct as
+select
+      a.cpty_type,
+      b.direction,
+      c.margin_type
+from (select distinct cpty_type from output) a
+cross join (select distinct direction from output) b
+cross join (select distinct margin_type from output) c
+order by a.cpty_type, b.direction, c.margin_type
+;
+
+
+create table col_trans_report as
+select
+      a.cpty_type,
+      a.direction,
+      a.margin_type as 'Collateral Type',               
+      coalesce(b.level_1_asset, 0) level_1_asset,
+      coalesce(b.level_2_asset, 0) level_2_asset,
+      coalesce(b.level_3_asset, 0) level_3_asset
+from rep_strusct a
+left join output b
+on a.cpty_type = b.cpty_type
+and a.direction = b.direction
+and a. margin_type = b.margin_type
+;
+```
+
+交叉连接“cpty_type”,“direction”和“margin_type”，扩展所有可选的类型。
+
+并将“margin_type”转换为“Collateral Type”。新表' rep_strusct '与模板对称。
+
+选择模版中罗列的所有项，并连接' rep_strusct '和' output '来创建最终报表。
+
+![](final_report.png)
+
+## 总结
+
+![](stats.png)
+
+该表清楚地显示了中央银行的抵押品交易情况。它借出的资产大约比收到的多18%。
+
+央行制定了其自身的抵押政策，以最大限度地降低交易对手违约的风险，并尽可能地减少对市场的广泛影响。
+
+因此，加拿大银行只与选定的、信誉良好的交易对手打交道。然而，这些交易仍存在抵押品本身固有的风险。
+
+从最终表中可以看出，加拿大银行的三级资产交易量最多，但是在这三种资产中其信用状况最差.
+
+在这种情况下，加拿大银行面临着较高的风险敞口。
+
+众所周知，政府债券比其他资产的风险相对较低，信用评级高的资产比评级低的资产更安全。
+
+因此，央行应该交易更多的一级和二级资产，以限制其风险。
